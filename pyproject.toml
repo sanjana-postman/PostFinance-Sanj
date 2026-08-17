@@ -1,0 +1,9 @@
+[project]
+name = "se-demo-api"
+version = "0.1.0"
+description = "SE demo FastAPI service template — clone via the shared demo hosting platform's onboarding flow"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi[standard]>=0.139.0",
+]

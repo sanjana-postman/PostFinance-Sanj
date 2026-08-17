@@ -1,0 +1,64 @@
+$kind: http-request
+description: Retrieves detailed information about a specific transaction by its ID.
+url: "{{baseUrl}}/api/v1/transactions/:transactionId"
+method: GET
+headers:
+  Accept: application/json
+pathVariables:
+  - key: transactionId
+    value: "{{transactionId}}"
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "value"
+        ]
+      }
+scripts:
+  - type: afterResponse
+    code: |-
+      // Contract tests: Get transaction by ID (GET /api/v1/transactions/:transactionId)
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Content-Type is application/json", function () {
+          pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+      });
+
+      const transactionSchema = {
+          type: "object",
+          required: ["transactionId", "createdAt", "amount", "currency", "accountId", "transactionType"],
+          properties: {
+              transactionId: { type: "string" },
+              createdAt: { type: "string" },
+              amount: { type: "number", minimum: 0 },
+              currency: { type: "string", enum: ["POST_COINS", "POST_GOLD", "POST_BUCKS"] },
+              accountId: { type: "string" },
+              transactionType: { type: "string", enum: ["WITHDRAWAL", "DEPOSIT"] }
+          }
+      };
+
+      const schema = {
+          type: "object",
+          required: ["transaction"],
+          properties: {
+              transaction: transactionSchema
+          }
+      };
+
+      pm.test("Response body matches transaction schema", function () {
+          pm.response.to.have.jsonSchema(schema);
+      });
+
+      pm.test("Response time is under 2000ms", function () {
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });
+    language: text/javascript
+examples: ./.resources/Get transaction by ID.resources/examples
+order: 3000

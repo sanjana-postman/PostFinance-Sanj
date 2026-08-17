@@ -1,0 +1,8 @@
+name: AWS Prod
+values:
+  - key: baseUrl
+    value: 'http://REPLACE_ME_SHARED_HOSTNAME/REPLACE_ME_SE_NAME/prod'
+  - key: adminUsername
+    value: admin
+  - key: adminPassword
+    value: REPLACE_ME_ADMIN_API_KEY

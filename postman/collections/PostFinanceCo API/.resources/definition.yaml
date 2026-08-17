@@ -1,0 +1,34 @@
+$kind: collection
+name: PostFinanceCo API
+description: |
+  The PostFinanceCo API makes it easy to manage transaction and account data. 
+
+  ## Features
+  - **Account Management**: Create, read, update, and delete bank accounts
+  - **Transaction Processing**: Transfer funds between accounts or deposit to accounts
+  - **Multiple Currencies**: Support for POST_COINS, POST_GOLD, and POST_BUCKS
+  - **API Key Authentication**: Secure endpoints with API key validation
+  - **Rate Limiting**: 300 requests per minute per API key
+variables:
+  apiKey: ""
+  baseUrl: http://localhost:8000
+  transactionId: ""
+  accountName: ""
+  accountId: ""
+scripts:
+  - type: http:beforeRequest
+    code: |-
+      // Attach the captured API key to authenticated requests (skip the auth-generation endpoint which uses Basic auth)
+      const apiKey = pm.collectionVariables.get("apiKey") || pm.environment.get("apiKey");
+      if (apiKey && !pm.request.url.toString().includes("/api/v1/auth")) {
+          pm.request.headers.upsert({ key: "x-api-key", value: apiKey });
+      }
+    language: text/javascript
+auth:
+  - id: b3e4bf6d-6cd2-40a5-aed8-5d2c8cf79671
+    type: apikey
+    name: apikey auth
+    credentials:
+      key: x-api-key
+      value: "{{apiKey}}"
+      in: header

@@ -1,0 +1,150 @@
+name: Lint, Test and Deploy
+
+on: push
+
+jobs:
+  lint:
+    name: Spec Lint
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Postman CLI
+        run: curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+      - name: Login to Postman CLI
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+      - name: Lint API Spec
+        run: |
+          postman spec lint "postman/specs/PostFinanceCo API.yaml" --workspace-id "${{ vars.POSTMAN_WORKSPACE_ID }}" --report-events
+
+  test:
+    name: API Smoke Tests
+    needs: [lint]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.3.2
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Start API server
+        run: |
+          nohup uv run fastapi run main.py --port 8000 > server.log 2>&1 &
+          disown
+
+      - name: Wait for API server to be ready
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8000/health > /dev/null; then
+              echo "Server is up"
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Server did not become ready within 30s" >&2
+          cat server.log
+          exit 1
+
+      - name: Install Postman CLI
+        run: curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+      - name: Login to Postman CLI
+        run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
+
+      # Both paths are directories/files in Postman's Native Git-sync format (a folder per
+      # collection, `.environment.yaml` per environment), not flat .postman_collection.json/
+      # .postman_environment.json exports — that's what actually lands in this repo once your
+      # workspace is linked via the desktop app's "Open folder"/"Push to Postman Cloud" step.
+      - name: Run API smoke tests
+        run: |
+          postman collection run "postman/collections/PostFinanceCo API" -e "postman/environments/Local Dev.environment.yaml" --reporter-cli-no-success-assertions --report-events
+
+      - name: Print server log
+        if: always()
+        run: cat server.log
+
+  deploy:
+    name: Deploy
+    needs: [lint, test]
+    # needs: alone defaults a job's condition to success() — an explicit `if:` replaces that
+    # default rather than ANDing with it, so success() must stay explicit here.
+    if: success() && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    concurrency:
+      group: deploy-${{ github.ref }}
+      cancel-in-progress: false
+    # `develop` deploys to staging (/dev path prefix), `main` deploys to prod. GitHub changes the
+    # OIDC token's `sub` claim to `repo:<org>/<repo>:environment:<name>` whenever a job sets
+    # `environment:` — this SE's IAM role trust policy (created by SeStack, see
+    # infra/lib/types.ts's ENV_NAMES = ['staging', 'prod']) matches on exactly `environment:prod`,
+    # NOT `environment:production` — that mismatch (copied from the reference repo, which really
+    # does use "production" throughout) would make every prod deploy's AssumeRoleWithWebIdentity
+    # fail with a denial that looks like a trust-policy bug at a glance.
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'staging' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve target environment
+        id: env
+        run: |
+          if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+            echo "name=prod" >> "$GITHUB_OUTPUT"
+            echo "namespace=${{ vars.NAMESPACE_PROD }}" >> "$GITHUB_OUTPUT"
+            echo "deployment=${{ vars.SE_NAME }}-prod" >> "$GITHUB_OUTPUT"
+          else
+            echo "name=staging" >> "$GITHUB_OUTPUT"
+            echo "namespace=${{ vars.NAMESPACE_STAGING }}" >> "$GITHUB_OUTPUT"
+            echo "deployment=${{ vars.SE_NAME }}-dev" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
+
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPO }}
+          IMAGE_TAG: ${{ steps.env.outputs.name }}-${{ github.sha }}
+          # SeStack's Deployment manifest (infra/lib/se-stack.ts) always references
+          # `<env>-latest` — keeping this tag pointed at every deploy's actual image (not just
+          # onboarding's one-time push) means a future `cdk deploy`/re-onboarding for this SE
+          # reasserts the real current image instead of rolling back to onboarding-time content.
+          # The immutable per-commit tag above stays the actual rollout target below.
+          LATEST_TAG: ${{ steps.env.outputs.name }}-latest
+        run: |
+          docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" -t "$ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG" .
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$LATEST_TAG"
+
+      - name: Point kubectl at the shared EKS cluster
+        run: aws eks update-kubeconfig --name "${{ vars.CLUSTER_NAME }}" --region "${{ vars.AWS_REGION || 'us-east-1' }}"
+
+      - name: Deploy new image
+        env:
+          ECR_REGISTRY: ${{ steps.ecr-login.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPO }}
+          IMAGE_TAG: ${{ steps.env.outputs.name }}-${{ github.sha }}
+          NAMESPACE: ${{ steps.env.outputs.namespace }}
+          DEPLOYMENT: ${{ steps.env.outputs.deployment }}
+        run: |
+          kubectl set image "deployment/$DEPLOYMENT" \
+            app="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" \
+            -n "$NAMESPACE"
+          kubectl rollout status "deployment/$DEPLOYMENT" \
+            -n "$NAMESPACE" --timeout=180s

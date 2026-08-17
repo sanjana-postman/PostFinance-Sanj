@@ -1,0 +1,60 @@
+$kind: http-request
+description: |
+  Retrieves a list of all accounts at PostFinanceCo. 
+  Optionally filter by owner name or creation date.
+url: "{{baseUrl}}/api/v1/accounts?owner="
+method: GET
+headers:
+  Accept: application/json
+queryParams:
+  - key: owner
+    value: ""
+    description: Filter accounts by owner's full name
+    $type: string
+scripts:
+  - type: afterResponse
+    code: |-
+      // Contract tests: List all accounts (GET /api/v1/accounts)
+      pm.test("Status code is 200", function () {
+          pm.response.to.have.status(200);
+      });
+
+      pm.test("Content-Type is application/json", function () {
+          pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+      });
+
+      const schema = {
+          type: "object",
+          required: ["accounts"],
+          properties: {
+              accounts: {
+                  type: "array",
+                  items: {
+                      type: "object",
+                      required: ["accountId", "owner", "createdAt", "balance", "currency"],
+                      properties: {
+                          accountId: { type: "string" },
+                          owner: { type: "string", minLength: 1 },
+                          createdAt: { type: "string" },
+                          balance: { type: "number", minimum: 0 },
+                          currency: { type: "string", enum: ["POST_COINS", "POST_GOLD", "POST_BUCKS"] }
+                      }
+                  }
+              }
+          }
+      };
+
+      pm.test("Response body matches accounts-list schema", function () {
+          pm.response.to.have.jsonSchema(schema);
+      });
+
+      pm.test("accounts payload is an array", function () {
+          pm.expect(pm.response.json().accounts).to.be.an("array");
+      });
+
+      pm.test("Response time is under 2000ms", function () {
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });
+    language: text/javascript
+examples: ./.resources/List all accounts.resources/examples
+order: 1000

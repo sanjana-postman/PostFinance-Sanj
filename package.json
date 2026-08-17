@@ -1,0 +1,14 @@
+{
+  "name": "se-demo-api-onboarding",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Onboarding tooling for this SE's clone of the shared demo hosting platform's template repo",
+  "scripts": {
+    "onboard": "ts-node scripts/onboard.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.6.0"
+  }
+}

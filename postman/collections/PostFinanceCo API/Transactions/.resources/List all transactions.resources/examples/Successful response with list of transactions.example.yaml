@@ -1,0 +1,113 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/v1/transactions?accountId={{accountId}}"
+  method: GET
+  headers:
+    - key: Accept
+      value: application/json
+    - key: x-api-key
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+  queryParams:
+    - key: accountId
+      value: "{{accountId}}"
+      description: Filter transactions by source account ID
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+    X-RateLimit-Limit: ""
+    X-RateLimit-Remaining: ""
+    X-RateLimit-Reset: ""
+  body:
+    type: json
+    content: |-
+      {
+        "transactions": [
+          {
+            "transactionId": "1",
+            "createdAt": "2024-01-10",
+            "amount": 94857902,
+            "currency": "POST_GOLD",
+            "accountId": "123",
+            "transactionType": "DEPOSIT"
+          },
+          {
+            "transactionId": "2",
+            "createdAt": "2024-01-10",
+            "amount": 94857902,
+            "currency": "POST_GOLD",
+            "accountId": "123",
+            "transactionType": "WITHDRAWAL"
+          }
+        ]
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "transactions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "transactionId": {
+                  "type": "string",
+                  "example": "{transactionId}",
+                  "description": "Unique identifier for the transaction"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2024-01-10",
+                  "description": "Date the transaction was created (YYYY-MM-DD)",
+                  "format": "date"
+                },
+                "amount": {
+                  "type": "number",
+                  "minimum": 0,
+                  "example": 10000,
+                  "description": "Transaction amount",
+                  "format": "double"
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "POST_COINS",
+                    "POST_GOLD",
+                    "POST_BUCKS"
+                  ],
+                  "example": "POST_COINS",
+                  "description": "Currency type for the transaction"
+                },
+                "accountId": {
+                  "type": "string",
+                  "example": "1",
+                  "description": "Account ID"
+                },
+                "transactionType": {
+                  "type": "string",
+                  "enum": [
+                    "WITHDRAWAL",
+                    "DEPOSIT"
+                  ],
+                  "example": "DEPOSIT",
+                  "description": "Type of transaction (deposit / withdrawal)"
+                }
+              },
+              "required": [
+                "transactionId",
+                "createdAt",
+                "amount",
+                "currency",
+                "accountId",
+                "transactionType"
+              ]
+            }
+          }
+        },
+        "required": [
+          "transactions"
+        ]
+      }
+order: 1000

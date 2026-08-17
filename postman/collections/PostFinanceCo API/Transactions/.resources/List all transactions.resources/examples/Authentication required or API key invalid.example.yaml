@@ -1,0 +1,60 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/v1/transactions?accountId={{accountId}}"
+  method: GET
+  headers:
+    - key: Accept
+      value: application/json
+    - key: x-api-key
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+  queryParams:
+    - key: accountId
+      value: "{{accountId}}"
+      description: Filter transactions by source account ID
+  body:
+    type: text
+    content: ""
+response:
+  statusCode: 401
+  statusText: Unauthorized
+  headers:
+    Content-Type: application/json
+  body:
+    type: json
+    content: |-
+      {
+        "error": {
+          "name": "authenticationError",
+          "message": "API key is required. Please provide an API key in the x-api-key header."
+        }
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "validationError",
+                "description": "Error type identifier"
+              },
+              "message": {
+                "type": "string",
+                "example": "Owner name is required and must be a string",
+                "description": "Human-readable error message"
+              }
+            },
+            "required": [
+              "name",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+order: 2000

@@ -1,0 +1,106 @@
+$kind: http-request
+description: |
+  Creates a new transaction. There are two types of transactions:
+  - **Deposit**: Add money to an account by setting transactionType to "DEPOSIT"
+  - **Withdrawal**: Remove money from an account by setting transactionType to "WITHDRAWAL"
+
+  **Important**: Transactions cannot be edited or deleted once created.
+url: "{{baseUrl}}/api/v1/transactions"
+method: POST
+headers:
+  Content-Type: application/json
+  Accept: application/json
+body:
+  type: json
+  content: |-
+    {
+      "accountId": "{{accountId}}",
+      "amount": 10000,
+      "currency": "POST_GOLD",
+      "transactionType": "DEPOSIT"
+    }
+  $type: |-
+    {
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string",
+          "example": "12345678",
+          "description": "Source account ID (use \"0\" for deposits from external source)"
+        },
+        "amount": {
+          "type": "number",
+          "minimum": 0,
+          "example": 10000,
+          "description": "Transaction amount (must be positive)",
+          "format": "double"
+        },
+        "currency": {
+          "type": "string",
+          "enum": [
+            "POST_COINS",
+            "POST_GOLD",
+            "POST_BUCKS"
+          ],
+          "example": "POST_COINS",
+          "description": "Currency type (must match account currencies)"
+        },
+        "transactionType": {
+          "type": "string",
+          "enum": [
+            "WITHDRAWAL",
+            "DEPOSIT"
+          ],
+          "example": "DEPOSIT",
+          "description": "Type of transaction (deposit / withdrawal)"
+        }
+      },
+      "required": [
+        "accountId",
+        "amount",
+        "currency",
+        "transactionType"
+      ]
+    }
+scripts:
+  - type: afterResponse
+    code: |-
+      // Contract tests: Create new transaction (POST /api/v1/transactions)
+      pm.test("Status code is 201", function () {
+          pm.response.to.have.status(201);
+      });
+
+      pm.test("Content-Type is application/json", function () {
+          pm.expect(pm.response.headers.get("Content-Type")).to.include("application/json");
+      });
+
+      const schema = {
+          type: "object",
+          required: ["transaction"],
+          properties: {
+              transaction: {
+                  type: "object",
+                  required: ["transactionId"],
+                  properties: {
+                      transactionId: { type: "string" }
+                  }
+              }
+          }
+      };
+
+      pm.test("Response body matches create-transaction schema", function () {
+          pm.response.to.have.jsonSchema(schema);
+      });
+
+      pm.test("Response time is under 2000ms", function () {
+          pm.expect(pm.response.responseTime).to.be.below(2000);
+      });
+
+      // Capture transactionId for downstream chaining
+      if (pm.response.code >= 200 && pm.response.code < 300) {
+          const response = pm.response.json();
+          pm.collectionVariables.set("transactionId", response.transaction.transactionId);
+      }
+    language: text/javascript
+examples: ./.resources/Create new transaction.resources/examples
+order: 2000

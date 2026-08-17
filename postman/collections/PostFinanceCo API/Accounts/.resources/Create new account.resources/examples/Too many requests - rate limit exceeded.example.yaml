@@ -1,0 +1,83 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/v1/accounts"
+  method: POST
+  headers:
+    - key: Content-Type
+      value: application/json
+    - key: Accept
+      value: application/json
+    - key: x-api-key
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+  body:
+    type: json
+    content: |-
+      {
+        "owner": "Nova Newman",
+        "currency": "POST_COINS",
+        "balance": 500
+      }
+response:
+  statusCode: 429
+  statusText: Too Many Requests
+  headers:
+    - key: Content-Type
+      value: application/json
+    - key: X-RateLimit-Limit
+      value: ""
+      disabled: false
+    - key: X-RateLimit-Remaining
+      value: "0"
+      disabled: false
+      $type: |-
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "integer",
+              "example": 0
+            }
+          }
+        }
+    - key: X-RateLimit-Reset
+      value: ""
+      disabled: false
+  body:
+    type: json
+    content: |-
+      {
+        "error": {
+          "name": "rateLimitExceeded",
+          "message": "Too many requests. Maximum 300 requests per minute allowed."
+        }
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "example": "validationError",
+                "description": "Error type identifier"
+              },
+              "message": {
+                "type": "string",
+                "example": "Owner name is required and must be a string",
+                "description": "Human-readable error message"
+              }
+            },
+            "required": [
+              "name",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+order: 4000
