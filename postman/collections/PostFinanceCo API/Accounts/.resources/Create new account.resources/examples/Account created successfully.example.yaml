@@ -1,0 +1,58 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/v1/accounts"
+  method: POST
+  headers:
+    - key: Content-Type
+      value: application/json
+    - key: Accept
+      value: application/json
+    - key: x-api-key
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+  body:
+    type: json
+    content: |-
+      {
+        "owner": "Nora Newman",
+        "balance": 500,
+        "currency": "POST_GOLD"
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+    X-RateLimit-Limit: ""
+    X-RateLimit-Remaining: ""
+    X-RateLimit-Reset: ""
+  body:
+    type: json
+    content: |-
+      {
+        "account": {
+          "accountId": "123"
+        }
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "account": {
+            "type": "object",
+            "properties": {
+              "accountId": {
+                "type": "string",
+                "description": "The unique identifier of the created account"
+              }
+            },
+            "required": [
+              "accountId"
+            ]
+          }
+        },
+        "required": [
+          "account"
+        ]
+      }
+order: 1000

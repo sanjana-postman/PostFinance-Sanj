@@ -1,0 +1,6 @@
+$kind: collection
+description: |
+  Transaction operations. A transaction records money moving in or out of an account.
+  Transactions at the Galactic Bank follow a blockchain-like approach. Once created, 
+  they cannot be updated or deleted.
+order: 3000

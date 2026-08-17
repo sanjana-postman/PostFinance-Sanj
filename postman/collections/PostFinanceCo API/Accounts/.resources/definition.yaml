@@ -1,0 +1,5 @@
+$kind: collection
+description: |
+  Account management operations. An account at the PostFinanceCo allows you to store funds.
+  Use these endpoints to list, create, update, and delete accounts.
+order: 2000

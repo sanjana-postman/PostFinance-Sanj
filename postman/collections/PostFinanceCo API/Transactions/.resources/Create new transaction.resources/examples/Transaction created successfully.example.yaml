@@ -1,0 +1,59 @@
+$kind: http-example
+request:
+  url: "{{baseUrl}}/api/v1/transactions"
+  method: POST
+  headers:
+    - key: Content-Type
+      value: application/json
+    - key: Accept
+      value: application/json
+    - key: x-api-key
+      value: <API Key>
+      description: "Added as a part of security scheme: apikey"
+  body:
+    type: json
+    content: |-
+      {
+        "accountId": "123",
+        "amount": 10000,
+        "currency": "POST_GOLD",
+        "transactionType": "DEPOSIT"
+      }
+response:
+  statusCode: 201
+  statusText: Created
+  headers:
+    Content-Type: application/json
+    X-RateLimit-Limit: ""
+    X-RateLimit-Remaining: ""
+    X-RateLimit-Reset: ""
+  body:
+    type: json
+    content: |-
+      {
+        "transaction": {
+          "transactionId": "1"
+        }
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "transaction": {
+            "type": "object",
+            "properties": {
+              "transactionId": {
+                "type": "string",
+                "description": "The unique identifier of the created transaction"
+              }
+            },
+            "required": [
+              "transactionId"
+            ]
+          }
+        },
+        "required": [
+          "transaction"
+        ]
+      }
+order: 1000

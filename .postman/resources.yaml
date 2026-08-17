@@ -3,3 +3,14 @@ workspace:
 cloudResources:
   globals:
     ../postman/globals/workspace.globals.yaml: ecfd50e6-7830-42b2-8ded-92c2b37d84c2
+  collections:
+    ../postman/collections/PostFinanceCo API: 52921466-b999a15e-2fe6-4a95-98cc-493fde050759
+  environments:
+    ../postman/environments/AWS Dev.environment.yaml: 52921466-3469d6d9-a983-4f00-9a99-40f3c25d7d8f
+    ../postman/environments/AWS Prod.environment.yaml: 52921466-573b0dc3-ee35-406f-8958-3d28c4c261d2
+    ../postman/environments/Local Dev.environment.yaml: 52921466-a95ae613-14aa-4cef-b8bd-f5ec3c7a18b7
+  specs:
+    ../postman/specs/PostFinanceCo API.yaml: dcf63fa1-f09d-4f3c-953d-8c824564bacb
+resourceNameMappings:
+  specs:
+    - ../postman/specs/PostFinanceCo API.yaml: PostFinanceCo API.yaml

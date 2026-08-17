@@ -1,0 +1,87 @@
+$kind: http-example
+request:
+  url: '{{baseUrl}}/api/v1/accounts?owner='
+  method: GET
+  headers:
+    - key: Accept
+      value: application/json
+    - key: x-api-key
+      value: <API Key>
+      description: 'Added as a part of security scheme: apikey'
+  queryParams:
+    - key: owner
+      value: ''
+      description: Filter accounts by owner's full name
+response:
+  statusCode: 200
+  statusText: OK
+  headers:
+    Content-Type: application/json
+    X-RateLimit-Limit: ''
+    X-RateLimit-Remaining: ''
+    X-RateLimit-Reset: ''
+  body:
+    type: json
+    content: |-
+      {
+        "accounts": []
+      }
+    $type: |-
+      {
+        "type": "object",
+        "properties": {
+          "accounts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "accountId": {
+                  "type": "string",
+                  "example": "1",
+                  "description": "Unique identifier for the account"
+                },
+                "owner": {
+                  "type": "string",
+                  "minLength": 1,
+                  "example": "Nova Newman",
+                  "description": "Full name of the account owner"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "example": "2023-04-10",
+                  "description": "Date the account was created (YYYY-MM-DD)",
+                  "format": "date"
+                },
+                "balance": {
+                  "type": "number",
+                  "minimum": 0,
+                  "example": 10000,
+                  "description": "Current account balance",
+                  "format": "double"
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "POST_COINS",
+                    "POST_GOLD",
+                    "POST_BUCKS"
+                  ],
+                  "example": "POST_COINS",
+                  "description": "Currency type for the account"
+                }
+              },
+              "required": [
+                "accountId",
+                "owner",
+                "createdAt",
+                "balance",
+                "currency"
+              ]
+            }
+          }
+        },
+        "required": [
+          "accounts"
+        ]
+      }
+order: 2000

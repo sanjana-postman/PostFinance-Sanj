@@ -1,0 +1,4 @@
+$kind: collection
+name: Admin
+description: Administrative operations including API key management
+order: 1000
