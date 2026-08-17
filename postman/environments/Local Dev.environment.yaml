@@ -1,8 +1,0 @@
-name: Local Dev
-values:
-  - key: baseUrl
-    value: 'http://localhost:8000'
-  - key: adminUsername
-    value: admin
-  - key: adminPassword
-    value: '1234'
