@@ -1,8 +1,8 @@
 name: AWS Dev
 values:
   - key: baseUrl
-    value: 'http://REPLACE_ME_SHARED_HOSTNAME/REPLACE_ME_SE_NAME/dev'
+    value: 'http://k8s-demohostplatform-b848aa2c47-1076010304.us-west-1.elb.amazonaws.com/sanjana-viswanath/dev'
   - key: adminUsername
     value: admin
   - key: adminPassword
-    value: REPLACE_ME_ADMIN_API_KEY
+    value: '48425d5a89fad9010e3d4285d764568210ab4391a34e39ed'
