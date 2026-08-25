@@ -45,7 +45,8 @@ jobs:
 
       - name: Run API tests
         run: |
-          postman collection run "postman/collections/PostFinanceCo API" -e "postman/environments/Local Dev.environment.yaml" --reporter-cli-no-success-assertions --report-events
-
+          postman collection run "52921466-b999a15e-2fe6-4a95-98cc-493fde050759" -e "52921466-573b0dc3-ee35-406f-8958-3d28c4c261d2" --reporter-cli-no-success-assertions --report-events
+          postman collection run "52921466-b999a15e-2fe6-4a95-98cc-493fde050759" -e "52921466-3469d6d9-a983-4f00-9a99-40f3c25d7d8f" --reporter-cli-no-success-assertions --report-events
+        
       - name: Push local changes to Postman workspace
         run: postman workspace push -y --verbose
