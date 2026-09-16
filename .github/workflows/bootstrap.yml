@@ -10,38 +10,53 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        - uses: actions/checkout@v4
+        - name: Install uv
+          uses: astral-sh/setup-uv@v8.3.2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        - name: Install dependencies
+          run: uv sync --locked
 
-      - name: Install dependencies
-        run: npm install
+        - name: Start API server
+          run: |
+            nohup uv run fastapi run main.py --port 8000 > server.log 2>&1 &
+            disown
 
-      - name: Build and smoke-test the service
-        run: |
-          npm start &
-          sleep 2
-          curl -fsS http://localhost:3000/health
-          pkill -f "node server.js" || true
+        - name: Wait for API server to be ready
+          run: |
+            for i in $(seq 1 30); do
+              if curl -sf http://localhost:8000/health > /dev/null; then
+                echo "Server is up"
+                exit 0
+              fi
+              sleep 1
+            done
+            echo "Server did not become ready within 30s" >&2
+            echo "----- server.log -----"
+            cat server.log
+            exit 1
+
+        - name: Install Postman CLI
+          run: |
+            curl -o- "https://dl-cli.pstmn.io/install/linux64.sh" | sh
+
+        - name: Login to Postman CLI
+          run: postman login --with-api-key ${{ secrets.POSTMAN_API_KEY }}
 
       # ---------------------------------------------------------------
       # Postman spec-driven automation (Gate 1 actions).
       # Reads openapi.yaml and bootstraps the Postman workspace.
       # ---------------------------------------------------------------
-      - name: Resolve Postman service token
-        id: resolve-token
-        uses: postman-cs/postman-resolve-service-token-action@main
-        with:
-          postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
+        - name: Resolve Postman service token
+          id: resolve-token
+          uses: postman-cs/postman-resolve-service-token-action@main
+          with:
+            postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
 
-      - name: Bootstrap Postman workspace
-        uses: postman-cs/postman-bootstrap-action@main
-        with:
-          spec-path: openapi.yaml
-          project-name: st-bootcamp-api
-          workspace-team-id: '177513'
-          postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
+        - name: Bootstrap Postman workspace
+          uses: postman-cs/postman-bootstrap-action@main
+          with:
+            spec-path: ../postman/specs/PostFinanceCo API.yaml
+            project-name: PostFinanceCo API
+            workspace-team-id: 'e54f23b3-bda6-494c-ae23-131ca034b165'
+            postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
