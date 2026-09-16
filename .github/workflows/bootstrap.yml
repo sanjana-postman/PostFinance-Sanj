@@ -49,12 +49,12 @@ jobs:
       # ---------------------------------------------------------------
         - name: Resolve Postman service token
           id: resolve-token
-          uses: postman-cs/postman-resolve-service-token-action@main
+          uses: postman-cs/postman-resolve-service-token-action@v2
           with:
             postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
 
         - name: Bootstrap Postman workspace
-          uses: postman-cs/postman-bootstrap-action@main
+          uses: postman-cs/postman-bootstrap-action@v2
           with:
             spec-path: ../postman/specs/PostFinanceCo API.yaml
             project-name: PostFinanceCo-Sanj
