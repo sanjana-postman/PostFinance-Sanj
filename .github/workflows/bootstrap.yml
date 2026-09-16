@@ -1,0 +1,47 @@
+name: Bootstrap API
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build and smoke-test the service
+        run: |
+          npm start &
+          sleep 2
+          curl -fsS http://localhost:3000/health
+          pkill -f "node server.js" || true
+
+      # ---------------------------------------------------------------
+      # Postman spec-driven automation (Gate 1 actions).
+      # Reads openapi.yaml and bootstraps the Postman workspace.
+      # ---------------------------------------------------------------
+      - name: Resolve Postman service token
+        id: resolve-token
+        uses: postman-cs/postman-resolve-service-token-action@main
+        with:
+          postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
+
+      - name: Bootstrap Postman workspace
+        uses: postman-cs/postman-bootstrap-action@main
+        with:
+          spec-path: openapi.yaml
+          project-name: st-bootcamp-api
+          workspace-team-id: '177513'
+          postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
