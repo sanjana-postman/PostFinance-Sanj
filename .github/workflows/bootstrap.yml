@@ -58,5 +58,5 @@ jobs:
           with:
             spec-path: ../postman/specs/PostFinanceCo API.yaml
             project-name: PostFinanceCo API
-            workspace-team-id: 'e54f23b3-bda6-494c-ae23-131ca034b165'
+            workspace-team-id: '177513'
             postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
