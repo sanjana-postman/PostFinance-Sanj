@@ -57,6 +57,6 @@ jobs:
           uses: postman-cs/postman-bootstrap-action@main
           with:
             spec-path: ../postman/specs/PostFinanceCo API.yaml
-            project-name: PostFinanceCo API
-            workspace-team-id: '177513'
+            project-name: PostFinanceCo-Sanj
+            workspace-team-id: '13347347'
             postman-api-key: ${{ secrets.POSTMAN_API_KEY }}
